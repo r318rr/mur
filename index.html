@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кисульде </title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{ --bg1:#2b0000; --bg2:#6b0000; --bg3:#ff4d4d; }
+body {
+  margin:0; font-family:'Inter',sans-serif; color:#fff; overflow:hidden;
+  background: linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+  background-size: 200% 200%; animation: bgMove 14s ease infinite;
+}
+@keyframes bgMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* subtle cursor-reactive glow */
+.cursor-glow{
+  position:fixed; inset:0; pointer-events:none;
+  background: radial-gradient(300px 300px at var(--x,50%) var(--y,50%), rgba(255,255,255,0.08), transparent 60%);
+  transition: background 0.15s ease;
+}
+
+.screen{display:none;height:100vh;justify-content:center;align-items:center;flex-direction:column;text-align:center;padding:24px}
+.active{display:flex}
+
+.card{background:rgba(255,255,255,0.06); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,0.15); border-radius:20px; padding:22px 24px; box-shadow:0 10px 40px rgba(0,0,0,0.25)}
+
+button{padding:12px 22px;margin:10px;border-radius:999px;background:rgba(255,255,255,0.92);color:#a00000;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.25);transition:all .28s cubic-bezier(.2,.8,.2,1);position:relative}
+button:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.fake{position:absolute}
+
+canvas{
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.4);
+  touch-action: none; /* 📱 фикс для телефона */
+  transition: transform 0.1s;
+}
+.fade{animation:fade 1.1s forwards}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.wave{animation:wave 3.2s ease-in-out infinite}
+@keyframes wave{0%{transform:translateY(0)}50%{transform:translateY(6px)}100%{transform:translateY(0)}}
+
+.typing{min-height:2.2em}
+
+
+.small{opacity:.8;font-size:.9rem}
+
+/* 👇 ВСТАВЛЯЕШЬ ПРЯМО ЗДЕСЬ */
+.mantra{
+  font-size: 2rem;
+  font-weight: 800;
+letter-spacing: 1px;
+  margin-top: 10px;
+  color: #fff;
+
+  text-shadow:
+    0 0 10px rgba(255,255,255,0.6),
+    0 0 20px rgba(255,80,80,0.6),
+    0 0 40px rgba(255,0,0,0.5);
+
+  animation: mantraPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mantraPulse{
+  0%{transform:scale(1); opacity:0.85}
+  50%{transform:scale(1.08); opacity:1}
+  100%{transform:scale(1); opacity:0.85}
+}
+.hint{
+  display:block;
+  margin-top:10px;
+
+  font-size:0.75rem;
+  opacity:0.45;
+
+  font-style:italic;
+  letter-spacing:0.3px;
+  transform: translateY(4px);
+}
+</style>
+</head>
+<body>
+<div class="cursor-glow"></div>
+
+<div class="screen active" id="screen1">
+  <div class="card">
+    <h1>кисульдочке 🐾</h1>
+    <p>обнаружен перегруженный, но все ещё легендарный человек</p>
+    <button onclick="nextScreen(2)">запустить режим «чуть легче»</button>
+  </div>
+</div>
+
+<div class="screen" id="screen2">
+  <div class="card">
+    <p>выбери кнопку</p>
+    <p class="small"><i>интуитивно. как будто это важно</i></p>
+    <button onclick="correctClick(this)">правильная</button>
+    <button class="fake">подумай еще</button>
+    <button class="fake">ну неет</button>
+  </div>
+</div>
+
+<div class="screen" id="screen3">
+  <div class="card">
+    <p>собирай!</p>
+    <p class="small"><i>да, сейчас это самое важное.</i></p>
+    <canvas id="puzzle" width="300" height="300"></canvas>
+    <button onclick="checkPuzzle()">чмок</button>
+  </div>
+</div>
+
+<div class="screen" id="screen4">
+  <div class="card">
+    <p class="typing" id="freezeText">сайт завис</p>
+  </div>
+</div>
+
+<div class="screen" id="screen5">
+  <div class="card">
+    <p>ладно </p>
+    <p>не только же тебе лагать)))))</p>
+    <button onclick="nextScreen(6)">ну сучара)</button>
+  </div>
+</div>
+
+<div class="screen" id="screen6">
+  <div class="card">
+    <p class="wave typing" id="phuketLine1"></p>
+    <p class="typing" id="phuketLine2"></p>
+    <button onclick="nextScreen(7)">насладиться</button>
+  </div>
+</div>
+
+<div class="screen" id="screen7">
+  <div class="card">
+    <p>это жизнь</p>
+    <p>иногда всё странно, криво и немного абсурдно (как здесь)</p>
+    <p class="small"><i>но ты почему-то всё равно справляешься</i></p>
+    <button onclick="nextScreen(8)">мур</button>
+  </div>
+</div>
+
+<div class="screen" id="screen8">
+  <div class="card">
+    <h1>✨</h1>
+   <p>поэтому глубоко вдохни, выдохни</p>
+<p class="mantra">нас ебать — что небо красить</p>
+    <button onclick="hug()">улыбнуться</button>
+    <p id="hugText" class="small"></p>
+  </div>
+</div>
+
+<script>
+// cursor reactive glow
+const glow = document.querySelector('.cursor-glow');
+document.addEventListener('mousemove', e=>{
+  const x = (e.clientX/window.innerWidth)*100;
+  const y = (e.clientY/window.innerHeight)*100;
+  glow.style.setProperty('--x', x+'%');
+  glow.style.setProperty('--y', y+'%');
+});
+
+function nextScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const next = document.getElementById('screen'+n);
+  next.classList.add('active'); 
+  next.classList.add('fade');
+
+  if(n===3){
+    initPuzzle(); // ← ВОТ ЭТО ДОБАВИТЬ
+  }
+
+  if(n===4){
+    typeText('freezeText','система зависла',30);
+    setTimeout(()=> nextScreen(5), 1800);
+  }
+
+  if(n===6){
+    sequencePhuket();
+  }
+}
+function correctClick(btn){
+  btn.innerText = 'вот это подача, милый! в спину не отдало?🎾';
+  btn.style.transform='scale(1.08)';
+  setTimeout(()=> nextScreen(3), 800);
+}
+
+// smoother escaping buttons (lerp-like)
+const fakes = document.querySelectorAll('.fake');
+fakes.forEach(btn=>{
+  btn.addEventListener('mouseenter',()=>{
+    const targetX = Math.random()*60;
+    const targetY = Math.random()*60;
+    btn.style.left = targetX + '%';
+    btn.style.top = targetY + '%';
+    btn.style.transition = 'left .45s cubic-bezier(.2,.8,.2,1), top .45s cubic-bezier(.2,.8,.2,1), transform .25s';
+    btn.style.transform = 'rotate('+(Math.random()*10-5)+'deg) scale(0.98)';
+  });
+});
+
+// typing helpers
+function typeText(id, text, speed=28){
+  const el = document.getElementById(id); el.innerHTML='';
+  let i=0; const t=setInterval(()=>{
+    el.innerHTML += text[i]||''; i++;
+    if(i>text.length) clearInterval(t);
+  }, speed);
+}
+
+function sequencePhuket(){
+  typeText('phuketLine1','пхукет. вечер. красивый закат. тепло.',32);
+  setTimeout(()=>{
+    typeText('phuketLine2','ты сидишь, куришь... и никто ничего не хочет от тебя (кроме меня, конечно же, мне тебя всегда немножко хочется.)',30);
+  },900);
+}
+
+let puzzleStarted = false;
+
+function initPuzzle(){
+
+  if(puzzleStarted) return;
+  puzzleStarted = true;
+
+  const canvas = document.getElementById('puzzle');
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  img.src = 'kitten.jpg';
+
+  let pieces = [];
+  const size = 3;
+  const pieceSize = 100;
+  const snapDistance = 25;
+
+  let dragged = null;
+
+  img.onload = () => {
+    for(let y=0;y<size;y++){
+      for(let x=0;x<size;x++){
+        pieces.push({
+          x: Math.random()*200,
+          y: Math.random()*200,
+          correctX:x*pieceSize,
+          correctY:y*pieceSize
+        });
+      }
+    }
+
+    pieces.sort(()=>Math.random()-0.5);
+    draw();
+  };
+
+  function draw(){
+    ctx.clearRect(0,0,300,300);
+ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+for(let i=0;i<=size;i++){
+  ctx.beginPath();
+  ctx.moveTo(i*pieceSize,0);
+  ctx.lineTo(i*pieceSize,300);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0,i*pieceSize);
+  ctx.lineTo(300,i*pieceSize);
+  ctx.stroke();
+}
+
+    pieces.forEach(p=>{
+     const scaleX = img.width / (size * pieceSize);
+const scaleY = img.height / (size * pieceSize);
+
+ctx.drawImage(
+  img,
+  p.correctX * scaleX,
+  p.correctY * scaleY,
+  pieceSize * scaleX,
+  pieceSize * scaleY,
+  p.x,
+  p.y,
+  pieceSize,
+  pieceSize
+);
+    });
+  }
+
+  let offsetX = 0;
+let offsetY = 0;
+
+function getMouse(e){
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - r.left,
+    y: e.clientY - r.top
+  };
+}
+
+function getTouch(e){
+  const r = canvas.getBoundingClientRect();
+  const t = e.touches[0] || e.changedTouches[0];
+  return {
+    x: t.clientX - r.left,
+    y: t.clientY - r.top
+  };
+}
+
+// нажали
+canvas.addEventListener('mousedown', e=>{
+  const m = getMouse(e);
+
+  dragged = pieces.find(p=>
+    m.x>p.x && m.x<p.x+pieceSize &&
+    m.y>p.y && m.y<p.y+pieceSize
+  );
+
+  if(dragged){
+    offsetX = m.x - dragged.x;
+    offsetY = m.y - dragged.y;
+  }
+});
+
+// двигаем (ВОТ ЭТО ДАЁТ “КАК В ИГРЕ”)
+canvas.addEventListener('mousemove', e=>{
+  if(!dragged) return;
+
+  const m = getMouse(e);
+  dragged.x += ((m.x - offsetX) - dragged.x) * 0.35;
+dragged.y += ((m.y - offsetY) - dragged.y) * 0.35;
+
+  draw();
+});
+
+// отпустили
+canvas.addEventListener('mouseup', e=>{
+  if(!dragged) return;
+
+  const dx = dragged.x - dragged.correctX;
+  const dy = dragged.y - dragged.correctY;
+
+if(Math.sqrt(dx*dx+dy*dy) < snapDistance){
+  dragged.x = dragged.correctX;
+  dragged.y = dragged.correctY;
+
+  // 📳 вибрация
+  if(navigator.vibrate){
+    navigator.vibrate(30);
+  }
+
+  // ✨ визуальный щелчок
+  canvas.style.transform = 'scale(1.03)';
+  setTimeout(()=>{
+    canvas.style.transform = 'scale(1)';
+  }, 100);
+}
+
+  dragged = null;
+  draw();
+});
+
+// если курсор ушёл
+canvas.addEventListener('mouseleave', ()=>{
+  dragged = null;
+});
+// 📱 TOUCH (для телефона)
+
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const m = getTouch(e);
+
+  dragged = pieces.find(p=>
+    m.x>p.x && m.x<p.x+pieceSize &&
+    m.y>p.y && m.y<p.y+pieceSize
+  );
+
+  if(dragged){
+    offsetX = m.x - dragged.x;
+    offsetY = m.y - dragged.y;
+  }
+});
+
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+
+  if(!dragged) return;
+
+  const m = getTouch(e);
+
+  dragged.x += ((m.x - offsetX) - dragged.x) * 0.35;
+  dragged.y += ((m.y - offsetY) - dragged.y) * 0.35;
+
+  draw();
+});
+
+canvas.addEventListener('touchend', e=>{
+  if(!dragged) return;
+
+  const dx = dragged.x - dragged.correctX;
+  const dy = dragged.y - dragged.correctY;
+
+  if(Math.sqrt(dx*dx+dy*dy) < snapDistance){
+    dragged.x = dragged.correctX;
+    dragged.y = dragged.correctY;
+
+    if(navigator.vibrate){
+      navigator.vibrate(30);
+    }
+
+    canvas.style.transform = 'scale(1.03)';
+    setTimeout(()=>{
+      canvas.style.transform = 'scale(1)';
+    }, 100);
+  }
+
+  dragged = null;
+  draw();
+});
+
+  window.checkPuzzle = function(){
+    const done = pieces.every(p=>
+      p.x===p.correctX && p.y===p.correctY
+    );
+
+    if(done){
+      nextScreen(4);
+    } else {
+      alert('почти. но ты же не сдаёшься ');
+    }
+  };
+}
+
+ 
+function hug(){
+  const el=document.getElementById('hugText');
+  
+el.innerHTML = `
+  умничка, а теперь иди и разнеси этот день, как умеешь,<br>
+  а я просто буду рядом ❤️
+  <span class="hint">(даже если не хочешь)</span>
+`;
+}
+</script>
+</body>
+</html>
